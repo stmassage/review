@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Disclaimer — Test / Educational Only</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;700&family=Nunito:wght@300;400;600,700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg: linear-gradient(135deg,#fff,#f6f8fb);
+      --card-bg: #ffffff;
+      --accent: #c81f2d;
+      --muted: #6b7280;
+      --radius: 12px;
+      --max-width: 900px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      background: var(--bg);
+      color:#111;
+      padding:24px;
+    }
+
+    .card{
+      width:100%;
+      max-width:var(--max-width);
+      background:var(--card-bg);
+      border-radius:var(--radius);
+      box-shadow:0 12px 36px rgba(16,24,40,0.08);
+      padding:28px;
+      border:1px solid rgba(16,24,40,0.04);
+    }
+
+    header {
+      display:flex;
+      gap:14px;
+      align-items:center;
+      margin-bottom:18px;
+    }
+    .logo {
+      width:56px;
+      height:56px;
+      border-radius:10px;
+      background:linear-gradient(135deg,var(--accent),#a01621);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:white;
+      font-family:"Merriweather", serif;
+      font-weight:700;
+      font-size:18px;
+      box-shadow:0 8px 26px rgba(200,31,45,0.12);
+    }
+    h1 {
+      margin:0;
+      font-family:"Merriweather", serif;
+      font-size:20px;
+      color:#111;
+    }
+    p.lead {
+      margin:8px 0 0 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .notice {
+      margin-top:18px;
+      padding:18px;
+      border-radius:10px;
+      background:linear-gradient(180deg,#fffaf6,#fff5f3);
+      border:1px solid rgba(200,31,45,0.08);
+      display:flex;
+      gap:14px;
+      align-items:flex-start;
+    }
+    .notice .icon {
+      width:44px; height:44px; border-radius:8px;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(200,31,45,0.08); color:var(--accent);
+      font-weight:700;
+    }
+    .notice h2 { margin:0 0 6px 0; font-size:16px; }
+    .notice p { margin:0; color:var(--muted); line-height:1.45; }
+
+    ul.rules {
+      margin:18px 0 0 18px;
+      color:#222;
+      line-height:1.6;
+    }
+    ul.rules li { margin:8px 0; }
+
+    .cta {
+      display:flex;
+      gap:12px;
+      margin-top:22px;
+      flex-wrap:wrap;
+    }
+    .btn {
+      display:inline-block;
+      padding:12px 18px;
+      border-radius:12px;
+      font-weight:700;
+      cursor:pointer;
+      border:0;
+      text-decoration:none;
+      text-align:center;
+      min-width:160px;
+    }
+    .btn.primary { background:var(--accent); color:#fff; box-shadow:0 8px 24px rgba(200,31,45,0.12); }
+    .btn.ghost { background:#fff; color:var(--accent); border:1px solid rgba(200,31,45,0.12); }
+    .btn.secondary { background:#f3f4f6; color:#111; }
+    .hint { margin-top:14px; color:var(--muted); font-size:13px; }
+
+    footer {
+      margin-top:20px;
+      border-top:1px dashed #eee;
+      padding-top:14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .small { color:var(--muted); font-size:13px }
+    @media (max-width:640px){
+      .cta { flex-direction:column; }
+      .btn { width:100%; min-width:unset; }
+    }
+  </style>
+</head>
+<body>
+  <main class="card" role="main" aria-labelledby="disclaimer-heading">
+    <header>
+      <div class="logo" aria-hidden="true">DF</div>
+      <div>
+        <h1 id="disclaimer-heading">Important — Test & Educational Use Only</h1>
+        <p class="lead">This repository contains demonstration pages. Please read before interacting.</p>
+      </div>
+    </header>
+
+    <section class="notice" aria-label="disclaimer message">
+      <div class="icon" aria-hidden="true">!</div>
+      <div>
+        <h2>Disclaimer</h2>
+        <p>
+          All pages and code in this repository are provided <strong>for testing and educational purposes only.</strong>
+          Do not enter real personal, financial, or sensitive information — use only <strong>dummy / fake data</strong>.
+        </p>
+      </div>
+    </section>
+
+    <ul class="rules" aria-label="rules">
+      <li><strong>Dummy data only:</strong> Any card numbers, emails, passwords, or personal data you enter should be fictional.</li>
+      <li><strong>Not for production:</strong> This project uses public anon keys and permissive policies — it is not secure for real user data.</li>
+      <li><strong>Privacy:</strong> Data you enter may be stored in the project database for demo/monitoring — do not use real credentials.</li>
+      <li><strong>Legal:</strong> You accept full responsibility for your actions when testing — do not use or share sensitive data here.</li>
+    </ul>
+
+ 
+
+    <p class="hint">Tip: add this file to the repository root and link it in your README so collaborators see the warning before using the demo.</p>
+
+    <footer>
+      <div class="small">Repository: <strong>test / educational only</strong></div>
+      <div class="small">Last updated: <span id="ts"></span></div>
+    </footer>
+  </main>
+
+  <script>
+    // Fill timestamp (ISO + friendly)
+    const tsEl = document.getElementById('ts');
+    const d = new Date();
+    tsEl.textContent = d.toLocaleString();
+  </script>
+</body>
+</html>
