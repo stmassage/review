@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Massage Intake & Preference — Professional</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --accent: #bfa074;
+    --accent-dark: #a88d63;
+    --bg: #f6f5f3;
+    --card: #ffffff;
+    --muted: #6b6b6b;
+    --success: #2e9b4f;
+    --max-width: 860px;
+    --radius: 14px;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:"Poppins",system-ui,Arial,sans-serif;
+    background:linear-gradient(180deg,#f8f7f5 0,#f3f2f0 100%);
+    color:#222;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  header{
+    background:var(--accent);
+    color:white;
+    padding:36px 18px;
+    text-align:center;
+  }
+  header h1{margin:0;font-size:22px;font-weight:600}
+  header p{margin:6px 0 0;opacity:.95;font-size:14px}
+
+  main{
+    max-width:var(--max-width);
+    margin:28px auto;
+    padding:0 16px;
+  }
+
+  .card{
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:0 10px 30px rgba(22,22,22,0.06);
+    overflow:hidden;
+  }
+
+  .form-panel{
+    padding:34px;
+  }
+
+  .progressbar{
+    display:flex;
+    gap:8px;
+    padding:18px;
+    background:linear-gradient(90deg, rgba(191,160,116,0.06), transparent);
+    align-items:center;
+    justify-content:space-between;
+  }
+
+  .progressbar li{
+    list-style:none;
+    flex:1;
+    text-align:center;
+    font-size:13px;
+    color:var(--muted);
+    position:relative;
+    padding:8px 6px;
+  }
+
+  .progressbar li::before{
+    content:counter(step);
+    counter-increment: step;
+    display:inline-block;
+    width:34px;height:34px;line-height:34px;border-radius:50%;
+    border:2px solid var(--accent);background:white;color:var(--accent);
+    margin-bottom:6px;
+  }
+
+  .progressbar li.active{ color:var(--accent); }
+  .progressbar li.active::before{ background:var(--accent); color:white; border-color:var(--accent); }
+
+  h2{ margin: 6px 0 14px; color:var(--accent); font-size:18px; }
+
+  label.form-label{
+    display:block;
+    font-weight:500;
+    margin-top:14px;
+    font-size:14px;
+    color:#222;
+    cursor:pointer;
+  }
+
+  input[type="text"],
+  input[type="tel"],
+  input[type="email"],
+  select,
+  textarea{
+    width:100%;
+    padding:11px 12px;
+    margin-top:8px;
+    border:1px solid #d7d7d7;
+    border-radius:10px;
+    font-size:14px;
+    background:white;
+  }
+  textarea{ min-height:92px; resize:vertical; }
+
+  .row{ display:flex; gap:12px; }
+  .col{ flex:1; }
+
+  .checkbox-group, .radio-group{
+    margin-top:10px;
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+
+  .checkbox-inline, .radio-inline{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-weight:400;
+    font-size:14px;
+    cursor:pointer;
+  }
+
+  input[type="checkbox"], input[type="radio"]{
+    width:auto;
+  }
+
+  .step{ display:none; animation:fadeIn .28s ease both; padding-top:8px; }
+  .step.active{ display:block; }
+
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:none } }
+
+  .actions{ display:flex; justify-content:space-between; gap:12px; margin-top:18px; align-items:center; }
+  .actions .left{ color:var(--muted); font-size:13px; }
+  .btn{
+    background:var(--accent);
+    color:white;
+    border:0;
+    padding:10px 16px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:600;
+    transition:all .16s ease;
+    box-shadow:0 6px 18px rgba(33,33,33,0.06);
+  }
+  .btn:hover{ background:var(--accent-dark); }
+  .btn.secondary{
+    background:#f2f2f2; color:#333; border:1px solid #e3e3e3;
+    box-shadow:none;
+  }
+
+  footer{ text-align:center; padding:18px; color:var(--muted); font-size:13px; }
+
+  /* Popup */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(6,6,6,0.36);
+    opacity:0; visibility:hidden; transition:all .18s ease;
+    z-index:1200; pointer-events:none;
+  }
+  .overlay.show{ opacity:1; visibility:visible; pointer-events:auto; }
+
+  .popup{
+    position:fixed;
+    left:50%; top:50%;
+    transform:translate(-50%,-50%) scale(.98);
+    min-width:260px;
+    max-width:92%;
+    background:white;
+    padding:22px 26px;
+    border-radius:12px;
+    box-shadow:0 18px 40px rgba(34,34,34,0.18);
+    z-index:1201;
+    opacity:0; transition:all .22s ease;
+    pointer-events:none;
+    text-align:center;
+  }
+  .popup.show{ opacity:1; transform:translate(-50%,-50%) scale(1); pointer-events:auto; }
+  .popup h3{ color:var(--success); margin:0 0 8px; }
+  .popup p{ margin:0 0 12px; color:#333; font-size:14px; }
+
+  /* small screens */
+  @media (max-width:640px){
+    .row{ flex-direction:column; }
+    .progressbar{ flex-direction:column; gap:6px; padding:12px; }
+    .progressbar li::before{ width:30px;height:30px;line-height:30px; }
+    .form-panel{ padding:20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Massage Intake & Preference Form</h1>
+  <p>Please complete this short intake before your first visit</p>
+</header>
+
+<main>
+  <div class="card" role="region" aria-label="Massage intake form">
+    <div class="progressbar" aria-hidden="true">
+      <ol style="display:flex;width:100%;padding:0;margin:0;counter-reset:step;">
+        <li class="active">Personal</li>
+        <li>Preferences</li>
+        <li>Health</li>
+        <li>Schedule</li>
+        <li>Review</li>
+      </ol>
+    </div>
+
+    <form id="massageForm" class="form-panel" autocomplete="on">
+      <!-- STEP 1 -->
+      <section class="step active" data-step="0" aria-hidden="false">
+        <h2>🧍 Personal Information</h2>
+
+        <label class="form-label" for="fullName">Full name <span aria-hidden="true" style="color:#bfa074">*</span></label>
+        <input id="fullName" name="fullName" type="text" placeholder="Jane Doe" required>
+
+        <div class="row">
+          <div class="col">
+            <label class="form-label" for="phone">Phone</label>
+            <input id="phone" name="phone" type="tel" placeholder="(555) 555-5555" >
+          </div>
+          <div class="col">
+            <label class="form-label" for="email">Email</label>
+            <input id="email" name="email" type="email" placeholder="you@example.com" >
+          </div>
+        </div>
+
+        <label class="form-label" for="ageRange">Age range</label>
+        <select id="ageRange" name="ageRange" required>
+          <option value="">Select...</option>
+          <option>Under 18</option>
+          <option>18–30</option>
+          <option>31–45</option>
+          <option>46–60</option>
+          <option>61+</option>
+        </select>
+
+        <label class="form-label" for="referral">How did you hear about us?</label>
+        <input id="referral" name="referral" type="text" placeholder="Friend, social media, walk-in...">
+
+      </section>
+
+      <!-- STEP 2 -->
+      <section class="step" data-step="1" aria-hidden="true">
+        <h2>💆 Massage Preferences</h2>
+
+        <label class="form-label" for="goal">Primary goal</label>
+        <select id="goal" name="goal" required>
+          <option value="">Select...</option>
+          <option>Relaxation / Stress Relief</option>
+          <option>Muscle Pain or Tension</option>
+          <option>Injury Recovery</option>
+          <option>Posture or Mobility</option>
+          <option>General Wellness</option>
+        </select>
+
+        <label class="form-label" for="type">Preferred massage type</label>
+        <select id="type" name="type">
+          <option value="">Select...</option>
+          <option>Swedish</option>
+          <option>Deep Tissue</option>
+          <option>Sports</option>
+          <option>Hot Stone</option>
+          <option>Aromatherapy</option>
+          <option>Thai</option>
+          <option>Not sure yet</option>
+        </select>
+
+        <label class="form-label">Focus areas</label>
+        <div class="checkbox-group" role="group" aria-label="Focus areas">
+          <label class="checkbox-inline"><input type="checkbox" name="focusAreas" value="back"> Back</label>
+          <label class="checkbox-inline"><input type="checkbox" name="focusAreas" value="neck"> Neck</label>
+          <label class="checkbox-inline"><input type="checkbox" name="focusAreas" value="shoulders"> Shoulders</label>
+          <label class="checkbox-inline"><input type="checkbox" name="focusAreas" value="legs"> Legs / Feet</label>
+          <label class="checkbox-inline"><input type="checkbox" name="focusAreas" value="arms"> Arms / Hands</label>
+        </div>
+
+        <label class="form-label">Preferred pressure</label>
+        <div class="radio-group" role="radiogroup" aria-label="Preferred pressure">
+          <label class="radio-inline"><input type="radio" name="pressure" value="light" required> Light</label>
+          <label class="radio-inline"><input type="radio" name="pressure" value="medium"> Medium</label>
+          <label class="radio-inline"><input type="radio" name="pressure" value="firm"> Firm</label>
+        </div>
+      </section>
+
+      <!-- STEP 3 -->
+      <section class="step" data-step="2" aria-hidden="true">
+        <h2>⚕️ Health & Wellness</h2>
+
+        <label class="form-label" for="injuries">Current injuries or pain areas</label>
+        <textarea id="injuries" name="injuries" placeholder="Describe any injuries or pain..."></textarea>
+
+        <label class="form-label" for="conditions">Health conditions we should know about</label>
+        <textarea id="conditions" name="conditions" placeholder="e.g. heart issues, arthritis, pregnancy"></textarea>
+
+        <label class="form-label" for="allergies">Allergies (oils, scents, lotions)</label>
+        <input id="allergies" name="allergies" type="text">
+        
+        <label class="form-label">Are you currently pregnant?</label>
+        <div class="radio-group" role="radiogroup" aria-label="Pregnancy status">
+          <label class="radio-inline"><input type="radio" name="pregnant" value="yes"> Yes</label>
+          <label class="radio-inline"><input type="radio" name="pregnant" value="no"> No</label>
+          <label class="radio-inline"><input type="radio" name="pregnant" value="na"> N/A</label>
+        </div>
+      </section>
+
+      <!-- STEP 4 -->
+      <section class="step" data-step="3" aria-hidden="true">
+        <h2>🕒 Scheduling & Communication</h2>
+
+        <label class="form-label" for="duration">Preferred session duration</label>
+        <select id="duration" name="duration" required>
+          <option value="">Select...</option>
+          <option>30 Minutes</option>
+          <option>60 Minutes</option>
+          <option>90 Minutes</option>
+          <option>120 Minutes</option>
+        </select>
+
+        <label class="form-label">Preferred days / times</label>
+        <div class="checkbox-group" role="group" aria-label="Preferred times">
+          <label class="checkbox-inline"><input type="checkbox" name="times" value="morning"> Morning</label>
+          <label class="checkbox-inline"><input type="checkbox" name="times" value="afternoon"> Afternoon</label>
+          <label class="checkbox-inline"><input type="checkbox" name="times" value="evening"> Evening</label>
+          <label class="checkbox-inline"><input type="checkbox" name="times" value="weekends"> Weekends</label>
+        </div>
+
+        <label class="checkbox-inline" style="margin-top:14px">
+          <input type="checkbox" id="offers" name="offers" value="yes"> I would like to receive offers or wellness updates by email.
+        </label>
+      </section>
+
+      <!-- STEP 5 -->
+      <section class="step" data-step="4" aria-hidden="true">
+        <h2>✍️ Review & Consent</h2>
+        <p style="margin-top:6px;color:#444">Please review your information and provide consent to submit.</p>
+
+        <label class="checkbox-inline" style="margin-top:10px">
+          <input id="consentAccuracy" type="checkbox" name="consentAccuracy" required> I confirm all information provided is accurate.
+        </label>
+        <label class="checkbox-inline" style="margin-top:8px">
+          <input id="consentUse" type="checkbox" name="consentUse" required> I consent to the use of my information for appointment and wellness purposes.
+        </label>
+
+        <label class="form-label" for="signature" style="margin-top:12px">Digital signature (type full name)</label>
+        <input id="signature" name="signature" type="text" required placeholder="Full name to sign">
+      </section>
+
+      <!-- ACTIONS -->
+      <div class="actions" aria-hidden="false">
+        <div class="left">
+          <button type="button" class="btn secondary" id="prevBtn" onclick="prevStep()" aria-label="Go to previous step">← Back</button>
+        </div>
+
+        <div>
+          <button type="button" class="btn secondary" id="nextBtn" onclick="nextStep()" aria-label="Go to next step">Next →</button>
+          <button type="submit" class="btn" id="submitBtn" style="display:none">Submit</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</main>
+
+<div class="overlay" id="overlay" aria-hidden="true"></div>
+
+<div class="popup" id="successPopup" role="alertdialog" aria-modal="true" aria-labelledby="popupTitle" aria-describedby="popupText" tabindex="-1">
+  <h3 id="popupTitle">✅ Submission Successful</h3>
+  <p id="popupText">Thank you — your intake form has been submitted. Redirecting now...</p>
+</div>
+
+<footer>© 2025 Your Massage Studio. All rights reserved.</footer>
+
+<script>
+  (function(){
+    const form = document.getElementById('massageForm');
+    const steps = Array.from(document.querySelectorAll('.step'));
+    const progressItems = Array.from(document.querySelectorAll('.progressbar li'));
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const overlay = document.getElementById('overlay');
+    const popup = document.getElementById('successPopup');
+
+    const REDIRECT_URL = 'https://www.google.com'; // change if needed
+    let currentStep = 0;
+
+    function showStep(index){
+      // clamp index
+      index = Math.max(0, Math.min(index, steps.length-1));
+      currentStep = index;
+
+      steps.forEach((s, i) => {
+        const isActive = i === index;
+        s.classList.toggle('active', isActive);
+        s.setAttribute('aria-hidden', !isActive);
+      });
+
+      progressItems.forEach((li, i) => li.classList.toggle('active', i <= index));
+
+      // buttons visibility
+      prevBtn.style.visibility = index === 0 ? 'hidden' : 'visible';
+      nextBtn.style.display = index === steps.length - 1 ? 'none' : 'inline-block';
+      submitBtn.style.display = index === steps.length - 1 ? 'inline-block' : 'none';
+
+      // focus the first focusable field in the active step for accessibility
+      const activeStep = steps[index];
+      const firstFocusable = activeStep.querySelector('input,select,textarea,button');
+      if(firstFocusable) firstFocusable.focus();
+    }
+
+    function validateStep(index){
+      const step = steps[index];
+      const fields = Array.from(step.querySelectorAll('input,select,textarea'));
+      for(const el of fields){
+        // skip readonly / disabled controls
+        if(el.disabled) continue;
+
+        // Use HTML5 constraint validation
+        if(el.willValidate && !el.checkValidity()){
+          // If it's part of a radio group, call reportValidity on the first in the group
+          if(el.type === 'radio'){
+            // find the first radio in this group (same name)
+            const group = step.querySelector(`input[type="radio"][name="${el.name}"]`);
+            if(group) group.reportValidity();
+            else el.reportValidity();
+          } else {
+            el.reportValidity();
+          }
+          return false;
+        }
+      }
+      return true;
+    }
+
+    window.nextStep = function(){
+      // validate current step before advancing
+      if(!validateStep(currentStep)) return;
+      if(currentStep < steps.length - 1){
+        showStep(currentStep + 1);
+      }
+    };
+
+    window.prevStep = function(){
+      if(currentStep > 0) showStep(currentStep - 1);
+    };
+
+    // On final submit: validate full form, jump to invalid step if needed, then show popup + redirect
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+
+      // If the browser considers the form invalid, find the first invalid control,
+      // jump to its step and reportValidity() to show the native message:
+      if(!form.checkValidity()){
+        const firstInvalid = form.querySelector(':invalid');
+        if(firstInvalid){
+          // find which step contains it
+          const stepIndex = steps.findIndex(s => s.contains(firstInvalid));
+          if(stepIndex >= 0) showStep(stepIndex);
+          // ensure the invalid control is focused and its message shown
+          firstInvalid.focus();
+          firstInvalid.reportValidity();
+        }
+        return;
+      }
+
+      // Final: all valid. Show popup and redirect after 2s.
+      overlay.classList.add('show');
+      popup.classList.add('show');
+      overlay.setAttribute('aria-hidden','false');
+
+      // focus popup for accessibility
+      popup.focus();
+
+      // Ensure we can't double submit - disable main form controls
+      nextBtn.disabled = true;
+      prevBtn.disabled = true;
+      submitBtn.disabled = true;
+
+      // small delay to let the user read popup, then redirect
+      setTimeout(() => {
+        // remove pointer traps (optional)
+        window.location.assign(REDIRECT_URL);
+      }, 2000);
+    });
+
+    // Initialize
+    showStep(0);
+
+    // (Optional) close popup on overlay click if you want to allow users to cancel redirect
+    overlay.addEventListener('click', function(){
+      // do nothing - keep overlay until redirect for now
+    });
+
+    // Accessibility: keyboard support for enter on next/prev (already buttons). Nothing else needed.
+  })();
+</script>
+
+</body>
+</html>

