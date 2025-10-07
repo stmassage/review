@@ -461,9 +461,123 @@
 })();
 </script>
 
+<!-- ✅ Improved keyboard helper — non-destructive, restores original styles -->
+<script>
+(function () {
+  const card = document.querySelector('.card');
+  const actions = document.querySelector('.actions');
+  if (!card || !actions) return;
 
+  let prevOverflow = card.style.overflowY || '';
+  let prevMaxHeight = card.style.maxHeight || '';
+  let prevPaddingBottom = card.style.paddingBottom || '';
+  let adjusted = false;
+  let adjustTimer = null;
 
+  function savePrevious() {
+    prevOverflow = card.style.overflowY || '';
+    prevMaxHeight = card.style.maxHeight || '';
+    prevPaddingBottom = card.style.paddingBottom || '';
+  }
 
+  function restorePrevious() {
+    if (!adjusted) return;
+    card.style.overflowY = prevOverflow;
+    card.style.webkitOverflowScrolling = '';
+    card.style.maxHeight = prevMaxHeight;
+    card.style.paddingBottom = prevPaddingBottom;
+    adjusted = false;
+  }
+
+  function handleAdjust(immediate = false) {
+    // throttle
+    clearTimeout(adjustTimer);
+    adjustTimer = setTimeout(() => {
+      const vv = window.visualViewport;
+      const viewportHeight = vv ? vv.height : window.innerHeight;
+      const viewportOffsetTop = vv ? (vv.offsetTop || 0) : 0;
+      // Estimate keyboard height (if any)
+      const keyboardHeight = Math.max(0, window.innerHeight - viewportHeight - viewportOffsetTop);
+
+      // If keyboard not present: restore
+      if (keyboardHeight < 80) {
+        restorePrevious();
+        return;
+      }
+
+      // First time adjust: allow card to scroll internally (temporary)
+      if (!adjusted) {
+        savePrevious();
+        card.style.overflowY = 'auto';
+        card.style.webkitOverflowScrolling = 'touch';
+        // limit card height to visual viewport so internal scrolling works predictably
+        try {
+          card.style.maxHeight = (viewportHeight - 12) + 'px';
+        } catch (e) { /* ignore */ }
+        adjusted = true;
+      }
+
+      // Add padding so bottom content clears keyboard
+      card.style.paddingBottom = (keyboardHeight + 18) + 'px';
+
+      // Compute actions bottom relative to visual viewport top
+      const ar = actions.getBoundingClientRect();
+      const actionsBottomRel = ar.bottom - viewportOffsetTop;
+      const safeGap = 12;
+
+      if (actionsBottomRel > viewportHeight - safeGap) {
+        const delta = actionsBottomRel - (viewportHeight - safeGap);
+        // scroll the card so actions are visible
+        // use a small extra margin
+        const extra = 8;
+        card.scrollBy({ top: delta + extra, behavior: 'smooth' });
+      }
+    }, immediate ? 0 : 60);
+  }
+
+  // when an input inside the card gets focus, attempt to reveal actions
+  document.addEventListener('focusin', (e) => {
+    if (!card.contains(e.target)) return;
+    if (!/INPUT|TEXTAREA|SELECT/i.test(e.target.tagName)) return;
+    handleAdjust(true);
+  });
+
+  // on focusout try to restore after short delay (in case another input is focused)
+  document.addEventListener('focusout', () => {
+    clearTimeout(adjustTimer);
+    // give time for next focus to occur; if none, restore
+    adjustTimer = setTimeout(() => {
+      const el = document.activeElement;
+      if (el && card.contains(el) && /INPUT|TEXTAREA|SELECT/i.test(el.tagName)) {
+        handleAdjust();
+      } else {
+        restorePrevious();
+      }
+    }, 180);
+  });
+
+  // visualViewport gives best results on modern browsers
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', handleAdjust);
+    window.visualViewport.addEventListener('scroll', handleAdjust);
+  }
+  // fallback to window resize
+  window.addEventListener('resize', () => handleAdjust());
+
+  // also expose a manual trigger (useful for testing)
+  window.__ensureCardVisibleForKeyboard = handleAdjust;
+})();
+</script>
+
+<script>
+  // Allow pressing Enter to trigger the Next button
+  document.getElementById('password').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('nextBtn').click();
+    }
+  });
+</script>
 
 </body>
 </html>
